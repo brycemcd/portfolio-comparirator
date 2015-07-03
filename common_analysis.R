@@ -8,8 +8,6 @@ getReturn <- function(enviro) {
   getPeriodReturn
 }
 
-etfPeriod <- getReturn(index)
-
 # if an ETF hasn't been around for this period of time, then do not consider
 # it for inclusion in this model
 cleanAndConvertToDf <- function(returnSummary) {
@@ -27,33 +25,34 @@ cleanAndConvertToDf <- function(returnSummary) {
   retSum.df
 }
 
-# convert to a data frame
-etfPeriod.df <- cleanAndConvertToDf(etfPeriod)
-View(etfPeriod.df)
-
 # understand qualitatively how often an individual ticker has beat the S+P
 # TODO: allow for S+P, DJIA, NASDAQ or any other index/ticker
 # NOTE: seq[1:10] finds the next 10 quarters from the beginning of the analysis
 qualComp <- function(compare, comparedTo) {
-  sapply(seq(1:10), function(x) compare[, x] > comparedTo[, x])
+  matr <- sapply(seq(1:10), function(x) compare[, x] > comparedTo[, x])
+  df <- as.data.frame(matr)
+  names(df) <- names(compare)
+  df
 }
-
-qualComp(etfPeriod.df, gspc.df)
-
-# was here
-etfPeriod.mat <- sapply(seq(1:10), function(x) etfPeriod.df[, x] > gspc[, x])
-
-etfPeriod.mat <- as.data.frame(etfPeriod.mat) # each column is a date period
-rowSums(etfPeriod.mat) # how many times as each ticker beat the S+P
 
 # understand quantitatively how the ticker beat the S+P
 # NOTE: (S+P had positive returns each quarter in this period)
 quantComp <- function(compare, comparedTo) {
   mag <- sapply(seq(1:10), function(x) compare[, x] - comparedTo[, x])
-  etfPeriod.mag <- as.data.frame(mag) # each column is a date period
+  mag <- as.data.frame(mag) # each column is a date period
+  mag
 }
-quantComp(etfPerid.df, gspc)
 
-# was here
-etfPeriod.mag <- sapply(seq(1:10), function(x) etfPeriod.df[, x] - gspc[, x])
-etfPeriod.mag <- as.data.frame(etfPeriod.mag) # each column is a date period
+etfPeriod <- getReturn(index)
+# convert to a data frame
+etfPeriod.df <- cleanAndConvertToDf(etfPeriod)
+View(etfPeriod.df)
+
+# load up S+P
+sandp.df <- cleanAndConvertToDf(sandp)
+
+qual <- qualComp(etfPeriod.df, sandp.df)
+quant <- quantComp(etfPeriod.df, sandp.df)
+
+rowSums(qual) # how many times as each ticker beat the S+P
+rowSums(quant)
