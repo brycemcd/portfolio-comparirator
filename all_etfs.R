@@ -2,6 +2,16 @@ library('XML')
 etf = 'http://etfdb.com/screener/'
 etf.table = readHTMLTable(etf, header=T,stringsAsFactors=F)
 
+panel.hist <- function(x, ...) {
+usr <- par("usr"); on.exit(par(usr))
+par(usr = c(usr[1:2], 0, 1.5) )
+h <- hist(x, plot = FALSE)
+breaks <- h$breaks; nB <- length(breaks)
+y <- h$counts; y <- y/max(y)
+rect(breaks[-nB], 0, breaks[-1], y, col = "darkblue", ...)
+}
+
+
 etfs <- new.env()
 getSymbols(etf.table$etfs$Symbol, env=etfs)
 
@@ -50,11 +60,25 @@ names(etf1y.df) <- names(etf1y)
 etf1y.df <- t(etf1y.df)
 View(etf1y.df)
 
+etf1y.mat <- sapply(seq(1:10), function(x) etf1y.df[, x] > gspc[, x])
+
+etf1y.mat <- as.data.frame(etf1y.mat) # each column is a date period
+rowSums(etf1y.mat) # how many times as each ticker beat the S+P
+
+# By how much did these tickers beat the S+P (S+P had positive returns each quarter in this period)
+etf1y.mag <- sapply(seq(1:10), function(x) etf1y.df[, x] - gspc[, x])
+etf1y.mag <- as.data.frame(etf1y.mag) # each column is a date period
+summary(rowSums(etf1y.mag)) # how many times as each ticker beat the S+P
+qplot(x=rowSums(etf1y.mag))
+etf1y.sum_returns <- rowSums(etf1y.mag)
+etf1y.sum_returns_positive <- etf1y.sum_returns[etf1y.sum_returns > 0]
+
+
 # find ETFs that have beat the S+P in the last two years, the last year and the
 # last two quarters
-warriorETFs <- (etf1y.df[, '2013-12-31'] > gspc[, '2013-12-31'] &
-                etf1y.df[, '2014-03-31'] > gspc[, '2014-03-31'] &
-                etf1y.df[, '2014-12-31'] > gspc[, '2014-12-31'])
+warriorETFs <- (etf1y.df[, '2015-03-31'] > gspc[, '2015-03-31'] &
+                etf1y.df[, '2014-12-31'] > gspc[, '2014-12-31'] &
+                etf1y.df[, '2013-12-31'] > gspc[, '2013-12-31'])
 
 
 e <- sapply(names(warriorETFs[warriorETFs == TRUE]), function(x) etf1y.df[x, ])
@@ -72,6 +96,7 @@ diffdf$med <- apply(diffdf, 1, function(x) median(x[1:3]))
 diffdf$stddev <- apply(diffdf, 1, function(x) sd(x[1:3]))
 diffdf$tot <- rowSums(diffdf)
 
+pairs(data=diffdf, ~ q1diff + y1diff + y2diff + y2return + stddev, cex=0.7, pch=4, upper.panel=panel.hist)
 qplot(data=diffdf, x=tot, y=stddev)
 # END NEW STUFF
 
