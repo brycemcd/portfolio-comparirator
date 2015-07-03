@@ -1,5 +1,5 @@
 # common analysis
-
+library('quantmod')
 # get returns for all etfs in the env
 getReturn <- function(enviro) {
   getPeriodReturn <- eapply(enviro, function(symbol){
