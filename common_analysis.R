@@ -42,17 +42,3 @@ quantComp <- function(compare, comparedTo) {
   mag <- as.data.frame(mag) # each column is a date period
   mag
 }
-
-etfPeriod <- getReturn(index)
-# convert to a data frame
-etfPeriod.df <- cleanAndConvertToDf(etfPeriod)
-View(etfPeriod.df)
-
-# load up S+P
-sandp.df <- cleanAndConvertToDf(sandp)
-
-qual <- qualComp(etfPeriod.df, sandp.df)
-quant <- quantComp(etfPeriod.df, sandp.df)
-
-rowSums(qual) # how many times as each ticker beat the S+P
-rowSums(quant)
